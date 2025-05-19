@@ -18,14 +18,10 @@ def test_param(fn):
         'c' : 'speed of light',
         'r' : 'mass',
         'q' : 'charge',
-        'wpi' : 'ion plasma frequency',
-        'wpe' : 'proper electron plasma frequency',
-        'wgi' : 'ion gyro frequency',
-        'wge' : 'electron gyro frequency',
-        'vti' : 'ion thermal velocity',
-        'vte' : 'electron thermal velocity',
-        'vai' : 'ion Alfven velocity',
-        'vae' : 'electron Alfven velocity',
+        'wp'  : 'plasma frequency',
+        'wg'  : 'gyro frequency',
+        'vth' : 'thermal velocity',
+        'va'  : 'Alfven velocity',
         'delx' : 'grid size',
         'delt' : 'time step',
         'n0' : 'number of particle / cell',
@@ -36,8 +32,15 @@ def test_param(fn):
     with h5py.File(fn, 'r') as f:
         param = dict(f.attrs)
 
+    # support old attribute names
+    if 'wpe' in param:
+        param['wp']  = np.array([param.pop('wpi'), param.pop('wpe')])
+        param['wg']  = np.array([param.pop('wgi'), param.pop('wge')])
+        param['vth'] = np.array([param.pop('vti'), param.pop('vte')])
+        param['va']  = np.array([param.pop('vai'), param.pop('vae')])
+
     # some additional parameters
-    param['ls']   = param['c']/param['wpe']
+    param['ls']   = param['c']/param['wp'][-1]
 
     print('*** print parameters ***')
     for key, desc in print_param.items():
@@ -76,11 +79,11 @@ def test_moment(fn, it, param, batch=True):
     c     = param['c']
     mi    = param['r'][0]
     me    = param['r'][1]
-    wpe   = param['wpe']
-    wpi   = param['wpi']
-    wge   = param['wge']
-    wgi   = param['wgi']
-    b0    = np.sqrt(4.0*np.pi*n0*mi*param['vti']**2)
+    wpe   = param['wp'][1]
+    wpi   = param['wp'][0]
+    wge   = param['wg'][1]
+    wgi   = param['wg'][0]
+    b0    = np.sqrt(4.0*np.pi*n0*mi*param['vth'][0]**2)
     lsize = 16
     tsize = 16
     pad   = 0.1

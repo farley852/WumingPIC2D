@@ -428,16 +428,16 @@ contains
   !
   ! output parameters
   !
-  subroutine paraio__param(n0, wpe, wpi, wge, wgi, vti, vte, filename)
+  subroutine paraio__param(n0, wp, wg, vth, filename)
     implicit none
     integer, intent(in)          :: n0
-    real(8), intent(in)          :: wpe, wpi, wge, wgi, vti, vte
+    real(8), intent(in)          :: wp(nsp), wg(nsp), vth(nsp)
     character(len=*), intent(in) :: filename
 
     character(len=256) :: jsonfile, datafile
     integer(int64) :: disp
     integer :: endian, fh, nx, ny
-    real(8) :: vai, vae
+    real(8) :: va(nsp)
 
     type(json_core) :: json
     type(json_value), pointer :: root, p
@@ -450,8 +450,7 @@ contains
     datafile = trim(filename) // '.raw'
     jsonfile = trim(filename) // '.json'
 
-    vai = c * wgi/wpi
-    vae = c * wge/wpe
+    va = c * abs(wg/wp)
 
     ! open json file
     call json%initialize()
@@ -507,29 +506,17 @@ contains
     call jsonio_put_attribute(json, p, q, 'q', disp, '')
     call mpiio_write_atomic(fh, disp, q)
 
-    call jsonio_put_attribute(json, p, wpe, 'wpe', disp, '')
-    call mpiio_write_atomic(fh, disp, wpe)
+    call jsonio_put_attribute(json, p, wp, 'wp', disp, '')
+    call mpiio_write_atomic(fh, disp, wp)
 
-    call jsonio_put_attribute(json, p, wge, 'wge', disp, '')
-    call mpiio_write_atomic(fh, disp, wge)
+    call jsonio_put_attribute(json, p, wg, 'wg', disp, '')
+    call mpiio_write_atomic(fh, disp, wg)
 
-    call jsonio_put_attribute(json, p, wpi, 'wpi', disp, '')
-    call mpiio_write_atomic(fh, disp, wpi)
+    call jsonio_put_attribute(json, p, vth, 'vth', disp, '')
+    call mpiio_write_atomic(fh, disp, vth)
 
-    call jsonio_put_attribute(json, p, wgi, 'wgi', disp, '')
-    call mpiio_write_atomic(fh, disp, wgi)
-
-    call jsonio_put_attribute(json, p, vti, 'vti', disp, '')
-    call mpiio_write_atomic(fh, disp, vti)
-
-    call jsonio_put_attribute(json, p, vte, 'vte', disp, '')
-    call mpiio_write_atomic(fh, disp, vte)
-
-    call jsonio_put_attribute(json, p, vai, 'vai', disp, '')
-    call mpiio_write_atomic(fh, disp, vai)
-
-    call jsonio_put_attribute(json, p, vae, 'vae', disp, '')
-    call mpiio_write_atomic(fh, disp, vae)
+    call jsonio_put_attribute(json, p, va, 'va', disp, '')
+    call mpiio_write_atomic(fh, disp, va)
 
     call jsonio_put_attribute(json, p, n0, 'n0', disp, '')
     call mpiio_write_atomic(fh, disp, n0)
