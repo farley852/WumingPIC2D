@@ -136,14 +136,13 @@ contains
   end subroutine fio__input
 
 
-  subroutine fio__param(n0,np2,temp,rtemp,fpe,fge,ls,file,nroot)
+  subroutine fio__param(n0,wp,wg,vth,file)
 
-    integer, intent(in)          :: n0, nroot
-    integer, intent(in)          :: np2(nys:nye,nsp)
-    real(8), intent(in)          :: temp, rtemp, fpe, fge, ls
+    integer, intent(in)          :: n0
+    real(8), intent(in)          :: wp(nsp), wg(nsp), vth(nsp)
     character(len=*), intent(in) :: file
     integer :: isp
-    real(8) :: pi, vti, vte, va
+    real(8) :: pi, va(nsp)
     character(len=256) :: filename
 
     if(.not.is_init)then
@@ -153,9 +152,7 @@ contains
 
     pi = 4.0D0*datan(1.0D0)
 
-    vti  = sqrt(2.*temp/r(1))
-    vte  = sqrt(2.*temp*rtemp/r(2))
-    va   = fge*r(2)*c/q(1)/sqrt(4.*pi*r(1)*n0)
+    va = c * abs(wg/wp)
 
     if(nrank == nroot)then
 
@@ -163,21 +160,21 @@ contains
        filename = trim(dir)//trim(file)//".dat"
        open(9,file=filename,status='unknown')
 
-       write(9,610) nxge-nxgs+1,' x ',nyge-nygs+1, ls
-       write(9,620) (np2(nys,isp),isp=1,nsp),np
-       write(9,630) delx,delt,c
-       write(9,640) (r(isp),isp=1,nsp)
-       write(9,650) (q(isp),isp=1,nsp)
-       write(9,660) fpe,fge,fpe*sqrt(r(2)/r(1)),fge*r(2)/r(1)
-       write(9,670) va,vti,vte,(vti/va)**2,rtemp,vti/(fge*r(2)/r(1))
+       write(9,'(A,I0,A,I0)') ' grid size=============>', nxge-nxgs+1,' x ',nyge-nygs+1
+       write(9,'(A,1p,e10.3)') ' delx                   => ', delx
+       write(9,'(A,1p,e10.3)') ' delt                   => ', delt
+       write(9,'(A,1p,e10.3)') ' c                      => ', c
+       write(9,'(A,1p,e10.3)') ' n0                     => ', n0
+       do isp = 1, nsp
+          write(9,'(A,I0)') ' --- species ', isp
+          write(9,'(A,1p,e10.3)') ' mass                  => ', r(isp)
+          write(9,'(A,1p,e10.3)') ' charge                => ', q(isp)
+          write(9,'(A,1p,e10.3)') ' plasma frequency      => ', wp(isp)
+          write(9,'(A,1p,e10.3)') ' gyro frequency        => ', wg(isp)
+          write(9,'(A,1p,e10.3)') ' thermal speed         => ', vth(isp)
+          write(9,'(A,1p,e10.3)') ' Alfven speed          => ', va(isp)
+       end do
        write(9,*)
-610    format(' grid size, electron skin depth ====>',i6,a,i6,f8.4)
-620    format(' particle number in cell============> ',i8,i8,'/',i8)
-630    format(' dx, dt, c =========================> ',f8.4,3x,f8.4,3x,f8.4)
-640    format(' Mi, Me  ===========================> ',2(1p,e10.2,1x))
-650    format(' Qi, Qe  ===========================> ',2(1p,e10.2,1x))
-660    format(' Fpe, Fge, Fpi Fgi =================> ',4(1p,e10.2,1x))
-670    format(' Va, Vi, Ve, beta, Te/Ti, rgi     ==> ',6(1p,e10.2,1x))
        close(9)
 
     endif

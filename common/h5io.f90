@@ -274,14 +274,13 @@ contains
   !
   ! output parameters
   !
-  subroutine h5io__param(n0,np2,temp,rtemp,fpe,fge,ls,file,nroot)
+  subroutine h5io__param(n0,wp,wg,vth,file)
     implicit none
-    integer, intent(in)          :: n0, nroot
-    integer, intent(in)          :: np2(nys:nye,nsp)
-    real(8), intent(in)          :: temp, rtemp, fpe, fge, ls
+    integer, intent(in)          :: n0
+    real(8), intent(in)          :: wp(nsp), wg(nsp), vth(nsp)
     character(len=*), intent(in) :: file
     integer :: isp
-    real(8) :: pi, fpi, fgi, vti, vte, vai, vae
+    real(8) :: pi, va(nsp)
 
     integer(hid_t) :: file_id
     character(len=256) :: filename
@@ -292,12 +291,7 @@ contains
     endif
 
     pi   = 4*atan(1.0D0)
-    vti  = sqrt(2*temp/r(1))
-    vte  = sqrt(2*temp*rtemp/r(2))
-    vai  = abs(fge*r(1)*c/q(1))/sqrt(4*pi*r(1)*n0) * r(2)/r(1)
-    vae  = abs(fge*r(2)*c/q(2))/sqrt(4*pi*r(2)*n0)
-    fpi  = fpe * sqrt(r(2)/r(1))
-    fgi  = fge * r(2)/r(1)
+    va   = c * abs(wg/wp)
 
     filename = trim(dir)//trim(file)//trim(".h5")
     call h5util_create_file(filename)
@@ -305,25 +299,16 @@ contains
 
     call h5util_put_attribute(file_id, "nx", nxge-nxgs+1)
     call h5util_put_attribute(file_id, "ny", nyge-nygs+1)
-    call h5util_put_attribute(file_id, "ls", ls)
-    call h5util_put_attribute(file_id, "np2", np2(nys,:))
     call h5util_put_attribute(file_id, "np", np)
     call h5util_put_attribute(file_id, "delx", delx)
     call h5util_put_attribute(file_id, "delt", delt)
     call h5util_put_attribute(file_id, "c", c)
     call h5util_put_attribute(file_id, "r", r)
     call h5util_put_attribute(file_id, "q", q)
-    call h5util_put_attribute(file_id, "fpe", fpe)
-    call h5util_put_attribute(file_id, "fge", fge)
-    call h5util_put_attribute(file_id, "fpi", fpi)
-    call h5util_put_attribute(file_id, "fgi", fgi)
-    call h5util_put_attribute(file_id, "vai", vai)
-    call h5util_put_attribute(file_id, "vae", vae)
-    call h5util_put_attribute(file_id, "vte", vte)
-    call h5util_put_attribute(file_id, "vti", vti)
-    call h5util_put_attribute(file_id, "beta", (vti/vai)**2)
-    call h5util_put_attribute(file_id, "rtemp", rtemp)
-    call h5util_put_attribute(file_id, "rgi", vti/(fge*r(2)/r(1)))
+    call h5util_put_attribute(file_id, "wp", wp)
+    call h5util_put_attribute(file_id, "wg", wg)
+    call h5util_put_attribute(file_id, "vth", vth)
+    call h5util_put_attribute(file_id, "va", va)
     call h5util_put_attribute(file_id, "n0", n0)
 
     call h5util_close_file(file_id)

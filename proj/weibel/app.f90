@@ -597,7 +597,7 @@ contains
     type(json_value), pointer :: root, p
 
     ! save deafult parameters
-    call io__param(n0, wpe, wpi, wge, wgi, vti, vte, filename)
+    call io__param(n0, (/wpi, wpe/), (/wgi, wge/), (/vti, vte/), filename)
 
     ! save additional parameters
     datafile = trim(datadir) // trim(filename) // '.raw'
